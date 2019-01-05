@@ -1,25 +1,28 @@
+from __future__ import print_function
 from shapedetector import ShapeDetector
+from videostream import VideoStream
 import imutils
 import numpy as np
 import cv2
+import time
 
-cap = cv2.VideoCapture(0)
+cap = VideoStream(usePiCamera=False).start()
 #cap.set(3,1920)
 #cap.set(4,1080)
 
-#lower_red1 = np.array([0,100,100])
-#lower_red2 = np.array([10,255,255])
+lower_red1 = np.array([0,100,100])
+lower_red2 = np.array([10,255,255])
 upper_red1 = np.array([160,120,100])
 upper_red2 = np.array([179,255,255])
 
 while(True):
     # Capture frame-by-frame
-    ret, frame = cap.read()
+    frame = cap.read()
     
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     red_mask1 = cv2.inRange(hsv, upper_red1, upper_red2)
-    #red_mask2 = cv2.inRange(hsv, lower_red1, lower_red2)
-    mask = red_mask1 #+ red_mask2
+    red_mask2 = cv2.inRange(hsv, lower_red1, lower_red2)
+    mask = red_mask1 + red_mask2
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
     res = cv2.bitwise_and(frame,frame, mask= mask)
@@ -54,6 +57,6 @@ while(True):
         break
 
 # When everything done, release the capture
-cap.release()
+cap.stop()
 cv2.destroyAllWindows()
     

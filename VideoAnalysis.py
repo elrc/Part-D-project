@@ -3,14 +3,18 @@ import imutils
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture('example.avi')
+cap = cv2.VideoCapture('example.mp4')
 
-upper_red1 = np.array([160,120,100])
-upper_red2 = np.array([179,255,255])
+lower_red1 = np.array([0, 70, 50])
+lower_red2 = np.array([10, 255, 255])
+upper_red1 = np.array([170,70,50])
+upper_red2 = np.array([180,255,255])
 
-fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 writer = None
 (h, w) = (None, None)
+
+print("[INFO] starting analysis...")
 
 while(cap.isOpened()):
     ret, frame = cap.read()
@@ -18,14 +22,14 @@ while(cap.isOpened()):
     if writer is None:
         # store the image dimensions, initialzie the video writer,
         # and construct the eros array
-        (h, w) = (576, 1024)
-        writer = cv2.VideoWriter("analysed.avi", fourcc, 30,
+        (h, w) = (1080, 1920)
+        writer = cv2.VideoWriter("analysed.mp4", 0x00000021, 30,
             (w, h), True)
 
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     red_mask1 = cv2.inRange(hsv, upper_red1, upper_red2)
-    #red_mask2 = cv2.inRange(hsv, lower_red1, lower_red2)
-    mask = red_mask1 #+ red_mask2
+    red_mask2 = cv2.inRange(hsv, lower_red1, lower_red2)
+    mask = red_mask1 + red_mask2
     mask = cv2.erode(mask, None, iterations=2)
     mask = cv2.dilate(mask, None, iterations=2)
     res = cv2.bitwise_and(frame,frame, mask= mask)
@@ -54,10 +58,11 @@ while(cap.isOpened()):
     writer.write(frame)
     
     # show the frame
-    cv2.imshow('frame',frame)
+    #cv2.imshow('frame',frame)
         
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+print("[INFO] analysis finished")
 cap.release()
 cv2.destroyAllWindows()
