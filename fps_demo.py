@@ -17,8 +17,8 @@ args = vars(ap.parse_args())
 # grab a pointer to the video stream and initialize the FPS counter
 print("[INFO] sampling frames from webcam...")
 stream = cv2.VideoCapture(0)
-stream.set(3, 960)
-stream.set(4, 540)
+stream.set(3, 1920)
+stream.set(4, 1080)
 fps = FPS().start()
  
 # loop over some frames

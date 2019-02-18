@@ -1,22 +1,66 @@
+"""
+Code to track and measure velocity of object using live webcam feed
+Written by: Robert Crocker
+Email contact: r.crocker-14@student.lboro.ac.uk
+Extracts of code taken from:
+https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
+https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/
+https://www.pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
+Date created: 27/01/19
+Last updated: 05/02/19
+"""
+
+# Imports all of the necessary packages for the code to work
+from __future__ import print_function
 from shapedetector import ShapeDetector
+from videostream import VideoStream
 import imutils
 import numpy as np
 import cv2
+import time
 import math
+import argparse
 
-cap = cv2.VideoCapture('example.mp4')
+def nothing(x):
+    pass
 
+# Passes the arguments given by the user when initalising the code
+# into the code for use later
+ap = argparse.ArgumentParser()
+ap.add_argument("-a", "--angle", type=float, default=0,
+    help="River angle")
+ap.add_argument("-d", "--distance", type=float, default=1,
+    help="Distance from camera to ground")
+args = vars(ap.parse_args())
+
+# Starts the webcam video stream
+cap = VideoStream(usePiCamera=False).start()
+#cap.set(3,1920)
+#cap.set(4,1080)
+
+# Inialises the maths functions and values which are used later in
+# calculations
 pi = math.pi
 tan = math.tan
 cos = math.cos
 sin = math.sin
 sqrt = math.sqrt
 atan = math.atan
-hp = 1920
-vp = 1080
-fr = 30
-t = 1/fr
-d = 0.55
+hp = 960
+vp = 540
+#fr = 30
+#t = 1/fr
+d = args["distance"]
+dd = d * 100
+strd = "%dcm" % dd
+
+# Sets the angle that the river is at 
+strrivang = "%d degrees" % round(args["angle"])
+riv_ang = args["angle"] * (pi / 180)
+pt1x = 860
+pt1y = 30
+pt2x = round(pt1x+100*sin(riv_ang))
+pt2y = round(pt1y+100*cos(riv_ang))
 
 Dl = sqrt(9 ** 2 + 16 ** 2)
 rat = atan(9 / 16)
@@ -31,31 +75,87 @@ ang1 = fv / 2
 
 i = 0
 sv = []
+av = []
 
+strsmax = "N/A"
+strsavg = "N/A"
 strvmax = "N/A"
 strvavg = "N/A"
 
-lower_red1 = np.array([0, 70, 50])
-lower_red2 = np.array([10, 255, 255])
-upper_red1 = np.array([170,70,50])
-upper_red2 = np.array([180,255,255])
+cv2.namedWindow("Trackbars")
 
-fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-writer = None
-(h, w) = (None, None)
+cv2.createTrackbar("L - H", "Trackbars", 0, 179, nothing)
+cv2.createTrackbar("L - S", "Trackbars", 100, 255, nothing)
+cv2.createTrackbar("L - V", "Trackbars", 100, 255, nothing)
+cv2.createTrackbar("U - H", "Trackbars", 10, 179, nothing)
+cv2.createTrackbar("U - S", "Trackbars", 255, 255, nothing)
+cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
 
-print("[INFO] starting analysis...")
-
-while(cap.isOpened()):
-    ret, frame = cap.read()
+while True:
+    frame = cap.read()
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     
-    if writer is None:
-        # store the image dimensions, initialzie the video writer,
-        # and construct the eros array
-        (h, w) = (1080, 1920)
-        writer = cv2.VideoWriter("analysed.mp4", 0x00000021, 30,
-            (w, h), True)
+    l_h = cv2.getTrackbarPos("L - H", "Trackbars")
+    l_s = cv2.getTrackbarPos("L - S", "Trackbars")
+    l_v = cv2.getTrackbarPos("L - V", "Trackbars")
+    u_h = cv2.getTrackbarPos("U - H", "Trackbars")
+    u_s = cv2.getTrackbarPos("U - S", "Trackbars")
+    u_v = cv2.getTrackbarPos("U - V", "Trackbars")
+    
+    lower_red1 = np.array([l_h, l_s, l_v])
+    lower_red2 = np.array([u_h, u_s, u_v])
+    
+    mask = cv2.inRange(hsv, lower_red1, lower_red2)
+    
+    cv2.imshow("frame", frame)
+    cv2.imshow("mask", mask)
+    
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
+cv2.destroyAllWindows()
 
+cv2.namedWindow("Trackbars")
+
+cv2.createTrackbar("L - H", "Trackbars", 160, 179, nothing)
+cv2.createTrackbar("L - S", "Trackbars", 100, 255, nothing)
+cv2.createTrackbar("L - V", "Trackbars", 100, 255, nothing)
+cv2.createTrackbar("U - H", "Trackbars", 179, 179, nothing)
+cv2.createTrackbar("U - S", "Trackbars", 255, 255, nothing)
+cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
+
+while True:
+    frame = cap.read()
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    
+    l_h = cv2.getTrackbarPos("L - H", "Trackbars")
+    l_s = cv2.getTrackbarPos("L - S", "Trackbars")
+    l_v = cv2.getTrackbarPos("L - V", "Trackbars")
+    u_h = cv2.getTrackbarPos("U - H", "Trackbars")
+    u_s = cv2.getTrackbarPos("U - S", "Trackbars")
+    u_v = cv2.getTrackbarPos("U - V", "Trackbars")
+    
+    upper_red1 = np.array([l_h, l_s, l_v])
+    upper_red2 = np.array([u_h, u_s, u_v])
+    
+    mask = cv2.inRange(hsv, upper_red1, upper_red2)
+    
+    cv2.imshow("frame", frame)
+    cv2.imshow("mask", mask)
+    
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
+cv2.destroyAllWindows()
+
+while(True):
+    # Capture frame-by-frame
+    frame = cap.read()
+    if i != 0:
+        end_timer = time.time()
+        t = end_timer - start_timer
+    start_timer = time.time()
+    
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     red_mask1 = cv2.inRange(hsv, upper_red1, upper_red2)
     red_mask2 = cv2.inRange(hsv, lower_red1, lower_red2)
@@ -73,7 +173,7 @@ while(cap.isOpened()):
             # compute the center of the contour, then detect the name of the
             # shape using only the contour
             M = cv2.moments(c)
-            if M['m00'] > 1000:
+            if M['m00']>100:
                 cX = int((M['m10'] / M['m00']))
                 cY = int((M['m01'] / M['m00']))
                 if cX > 240 and cX < 1680:
@@ -83,7 +183,9 @@ while(cap.isOpened()):
                             if i == 0:
                                 pcX = cX
                                 pcY = cY
-                                strv = "0"
+                                strs = "0"
+                                strsmax = "N/A"
+                                strsavg = "N/A"
                                 strvmax = "N/A"
                                 strvavg = "N/A"
                                 i = 1
@@ -115,11 +217,24 @@ while(cap.isOpened()):
                                     y2 = (y / 2) + (d * tan(rcy - hvfv))
 
                                 ds = sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
-                                v = ds / t
-                                strv = "%f m/s" % v
-                                sv.append(v)
-                                vmax = max(sv)
-                                vavg = sum(sv) / len(sv)
+                                if x1 == x2:
+                                    vel_ang = 0
+                                elif y1 == y2:
+                                    vel_ang = pi / 2
+                                else:
+                                    vel_ang = atan((x1 - x2) / (y1 - y2))
+                                vel_ang_deg = vel_ang * (180 / pi)
+                                s = ds / t
+                                strs = "%f m/s" % s
+                                sv.append(s)
+                                smax = max(sv)
+                                savg = sum(sv) / len(sv)
+                                strsmax = "Max Speed = %f m/s" % smax
+                                strsavg = "Average Speed = %f m/s" % savg
+                                ang_vel = s * cos(riv_ang - vel_ang)
+                                av.append(ang_vel)
+                                vmax = max(av)
+                                vavg = sum(av) / len(av)
                                 strvmax = "Max Velocity = %f m/s" % vmax
                                 strvavg = "Average Velocity = %f m/s" % vavg
                                 pcX = cX
@@ -128,18 +243,24 @@ while(cap.isOpened()):
                             # then draw the contours and the name of the shape on the image
                             c = c.astype("int")
                             cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
-                            cv2.putText(frame, strv, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, strvmax, (1, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
-    cv2.putText(frame, strvavg, (1, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
-    
-    writer.write(frame)
+                            cv2.putText(frame, strs, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.putText(frame, strsmax, (1, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
+    cv2.putText(frame, strsavg, (1, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
+    cv2.putText(frame, strvmax, (1, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
+    cv2.putText(frame, strvavg, (1, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
+    cv2.putText(frame, strd, (1, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 0), 2)
+    cv2.putText(frame, strrivang, (pt1x-15, pt1y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0 , 0, 255), 2)
+    cv2.arrowedLine(frame, (pt1x, pt1y), (pt2x, pt2y), (0, 0, 255), 3)
     
     # show the frame
-    #cv2.imshow('frame',frame)
+    cv2.imshow('frame',frame)
+    #cv2.imshow("Mask", mask)
+    #cv2.imshow("Overlay", res)
         
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-print("[INFO] analysis finished")
-cap.release()
+# When everything done, release the capture
+cap.stop()
 cv2.destroyAllWindows()
+    
