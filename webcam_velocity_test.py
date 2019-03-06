@@ -24,6 +24,72 @@ import argparse
 def nothing(x):
     pass
 
+def velocity_math(i,t,sv,av,cX,cY,pcX,pcY,d,ang1,rat,rpph,rppv,hhfv,hvfv):
+    if i == 0:
+        pcX = cX
+        pcY = cY
+        strs = "0"
+        strsmax = "N/A"
+        strsavg = "N/A"
+        strvmax = "N/A"
+        strvavg = "N/A"
+        i = 1
+    else:
+        w = 2 * d * tan(ang1)
+        x = w * cos(rat)
+        y = w * sin(rat)
+        prcx = rpph * pcX
+        prcy = rppv * pcY
+        rcx= rpph * cX
+        rcy = rppv * cY
+        
+        if prcx <= hhfv:
+            x1 = (x / 2) - (d * tan(hhfv - prcx))
+        elif prcx > hhfv:
+            x1 = (x / 2) + (d * tan(prcx - hhfv))
+        if prcy <= hvfv:
+            y1 = (y / 2) - (d * tan(hvfv - prcy))
+        elif prcy > hvfv:
+            y1 = (y / 2) + (d * tan(prcy - hvfv))
+                                
+        if rcx <= hhfv:
+            x2 = (x / 2) - (d * tan(hhfv - rcx))
+        elif rcx > hhfv:
+            x2 = (x / 2) + (d * tan(rcx - hhfv))
+        if rcy <= hvfv:
+            y2 = (y / 2) - (d * tan(hvfv - rcy))
+        elif rcy > hvfv:
+            y2 = (y / 2) + (d * tan(rcy - hvfv))
+
+        ds = sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
+        if x1 == x2:
+            vel_ang = 0
+        elif y1 == y2 and x2 > x1:
+            vel_ang = pi / 2
+        elif y1 == y2 and x2 < x1:
+            vel_ang = (-1 * pi) / 2
+        elif y1 == y2 and x1 == x2:
+            vel_ang = 0
+        else:
+            vel_ang = atan((x1 - x2) / (y1 - y2))
+        vel_ang_deg = vel_ang * (180 / pi)
+        s = ds / t
+        strs = "%f m/s" % s
+        sv.append(s)
+        smax = max(sv)
+        savg = sum(sv) / len(sv)
+        strsmax = "Max Speed = %f m/s" % smax
+        strsavg = "Average Speed = %f m/s" % savg
+        ang_vel = s * cos(riv_ang - vel_ang)
+        av.append(ang_vel)
+        vmax = max(av)
+        vavg = sum(av) / len(av)
+        strvmax = "Max Velocity = %f m/s" % vmax
+        strvavg = "Average Velocity = %f m/s" % vavg
+        pcX = cX
+        pcY = cY
+    return (i,sv,av,pcX,pcY,strs,strsmax,strsavg,strvmax,strvavg)
+
 # Passes the arguments given by the user when initalising the code
 # into the code for use later
 ap = argparse.ArgumentParser()
@@ -74,6 +140,9 @@ rppv = vfv / vp
 ang1 = fv / 2
 
 i = 0
+t = 0
+pcX = 0
+pcY = 0
 sv = []
 av = []
 
@@ -180,69 +249,7 @@ while(True):
                     if cY > 135 and cY < 945:
                         shape = sd.detect(c)
                         if shape == "square":
-                            if i == 0:
-                                pcX = cX
-                                pcY = cY
-                                strs = "0"
-                                strsmax = "N/A"
-                                strsavg = "N/A"
-                                strvmax = "N/A"
-                                strvavg = "N/A"
-                                i = 1
-                            else:
-                                w = 2 * d * tan(ang1)
-                                x = w * cos(rat)
-                                y = w * sin(rat)
-                                prcx = rpph * pcX
-                                prcy = rppv * pcY
-                                rcx= rpph * cX
-                                rcy = rppv * cY
-                                
-                                if prcx <= hhfv:
-                                    x1 = (x / 2) - (d * tan(hhfv - prcx))
-                                elif prcx > hhfv:
-                                    x1 = (x / 2) + (d * tan(prcx - hhfv))
-                                if prcy <= hvfv:
-                                    y1 = (y / 2) - (d * tan(hvfv - prcy))
-                                elif prcy > hvfv:
-                                    y1 = (y / 2) + (d * tan(prcy - hvfv))
-                                
-                                if rcx <= hhfv:
-                                    x2 = (x / 2) - (d * tan(hhfv - rcx))
-                                elif rcx > hhfv:
-                                    x2 = (x / 2) + (d * tan(rcx - hhfv))
-                                if rcy <= hvfv:
-                                    y2 = (y / 2) - (d * tan(hvfv - rcy))
-                                elif rcy > hvfv:
-                                    y2 = (y / 2) + (d * tan(rcy - hvfv))
-
-                                ds = sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2))
-                                if x1 == x2:
-                                    vel_ang = 0
-                                elif y1 == y2 and x2 > x1:
-                                    vel_ang = pi / 2
-                                elif y1 == y2 and x2 < x1:
-                                    vel_ang = (-1 * pi) / 2
-                                elif y1 == y2 and x1 == x2:
-                                    vel_ang = 0
-                                else:
-                                    vel_ang = atan((x1 - x2) / (y1 - y2))
-                                vel_ang_deg = vel_ang * (180 / pi)
-                                s = ds / t
-                                strs = "%f m/s" % s
-                                sv.append(s)
-                                smax = max(sv)
-                                savg = sum(sv) / len(sv)
-                                strsmax = "Max Speed = %f m/s" % smax
-                                strsavg = "Average Speed = %f m/s" % savg
-                                ang_vel = s * cos(riv_ang - vel_ang)
-                                av.append(ang_vel)
-                                vmax = max(av)
-                                vavg = sum(av) / len(av)
-                                strvmax = "Max Velocity = %f m/s" % vmax
-                                strvavg = "Average Velocity = %f m/s" % vavg
-                                pcX = cX
-                                pcY = cY
+                            i,sv,av,pcX,pcY,strs,strsmax,strsavg,strvmax,strvavg = velocity_math(i,t,sv,av,cX,cY,pcX,pcY,d,ang1,rat,rpph,rppv,hhfv,hvfv)
                             # multiply the contour (x, y)-coordinates by the resize ratio,
                             # then draw the contours and the name of the shape on the image
                             c = c.astype("int")
