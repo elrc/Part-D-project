@@ -7,7 +7,7 @@ https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
 https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/
 https://www.pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
 Date created: 27/01/19
-Last updated: 05/02/19
+Last updated: 06/03/19
 """
 
 # Imports all of the necessary packages for the code to work
@@ -95,6 +95,9 @@ while True:
     frame = cap.read()
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     
+    value = cv2.split(hsv)[2]
+    average1,_,_,_ = cv2.mean(value)
+    
     l_h = cv2.getTrackbarPos("L - H", "Trackbars")
     l_s = cv2.getTrackbarPos("L - S", "Trackbars")
     l_v = cv2.getTrackbarPos("L - V", "Trackbars")
@@ -128,6 +131,9 @@ while True:
     frame = cap.read()
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     
+    value = cv2.split(hsv)[2]
+    average2,_,_,_ = cv2.mean(value)
+    
     l_h = cv2.getTrackbarPos("L - H", "Trackbars")
     l_s = cv2.getTrackbarPos("L - S", "Trackbars")
     l_v = cv2.getTrackbarPos("L - V", "Trackbars")
@@ -155,6 +161,19 @@ while(True):
         end_timer = time.time()
         t = end_timer - start_timer
     start_timer = time.time()
+    
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    value = cv2.split(image)[2]
+    average,_,_,_ = cv2.mean(value)
+    
+    if average != average1:
+        diff1 = average - average1
+        lower_red1[2] = lower_red1[2] + round(diff1)
+        average1 = average
+    if average != average2:
+        diff2 = average - average2
+        upper_red1[2] = upper_red1[2] + round(diff2)
+        average2 = average
     
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     red_mask1 = cv2.inRange(hsv, upper_red1, upper_red2)

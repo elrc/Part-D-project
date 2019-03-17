@@ -1,48 +1,56 @@
 # import the necessary packages
 from __future__ import print_function
 from videostream import VideoStream
+import RPi.GPIO as GPIO
 import numpy as np
+import warnings
+import ultrasonic
 import imutils
 import time
 import cv2
 
+GPIO.setwarnings(False)
+
 # initialize the video stream and allow the camera
 # sensor to warmup
 print("[INFO] warming up camera...")
-vs = VideoStream(usePiCamera=False).start()
-time.sleep(2.0)
+vs = VideoStream(usePiCamera=False, resolution=(1024,576), framerate=20).start()
+TRIG,ECHO = ultrasonic.ultrasonic_setup()
+
+dv = []
  
 # initialize the FourCC, video writer, dimensions of the frame, and
 # zeros array
-fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 writer = None
 (h, w) = (None, None)
+
+cv2.namedWindow("Window")
 
 # loop over frames from the video stream
 while True:
     # grab the frame from the video stream and resize it to have a
     # maximum width of 300 pixels
     frame = vs.read()
+    distance = ultrasonic.ultrasonic_read(TRIG,ECHO)
+    dv.append(distance)
  
     # check if the writer is None
     if writer is None:
         # store the image dimensions, initialzie the video writer,
         # and construct the eros array
         (h, w) = (576, 1024)
-        writer = cv2.VideoWriter("example.avi", fourcc, 30,
+        writer = cv2.VideoWriter("example.avi", fourcc, 20,
             (w, h), True)
  
-    output = frame
- 
     # write the output frame to file
-    writer.write(output)
+    writer.write(frame)
     
     # show the frames
-    cv2.imshow("Output", output)
-    key = cv2.waitKey(1) & 0xFF
+    #cv2.imshow("Output", frame)
  
     # if the `q` key was pressed, break from the loop
-    if key == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
  
 # do a bit of cleanup
@@ -50,3 +58,6 @@ print("[INFO] cleaning up...")
 cv2.destroyAllWindows()
 vs.stop()
 writer.release()
+ultrasonic.ultrasonic_cleanup()
+
+np.savetxt("/home/pi/PartD_Project/Variables/distance_values.csv", np.array(dv), delimiter=",")

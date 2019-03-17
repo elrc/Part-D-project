@@ -3,13 +3,14 @@ from threading import Thread
 import cv2
  
 class WebcamVideoStream:
-    def __init__(self, src=0):
+    def __init__(self, src=0, resolution=(960, 540), framerate=60):
         # initialize the video camera stream and read the first frame
         # from the stream
         self.stream = cv2.VideoCapture(src)
         
-        self.stream.set(3, 960)
-        self.stream.set(4, 540)
+        self.stream.set(3, resolution[0])
+        self.stream.set(4, resolution[1])
+        self.stream.set(5, framerate)
         
         (self.grabbed, self.frame) = self.stream.read()
  

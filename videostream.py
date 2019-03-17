@@ -2,8 +2,8 @@
 from webcamvideostream import WebcamVideoStream
  
 class VideoStream:
-    def __init__(self, src=0, usePiCamera=False, resolution=(320, 240),
-        framerate=32):
+    def __init__(self, src=0, usePiCamera=False, resolution=(960, 540),
+        framerate=60):
         # check to see if the picamera module should be used
         if usePiCamera:
             # only import the picamera packages unless we are
@@ -20,7 +20,7 @@ class VideoStream:
         # otherwise, we are using OpenCV so initialize the webcam
         # stream
         else:
-            self.stream = WebcamVideoStream(src=src)
+            self.stream = WebcamVideoStream(src=src, resolution=resolution, framerate=framerate)
             
     def start(self):
         # start the threaded video stream
