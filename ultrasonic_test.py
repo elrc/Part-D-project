@@ -10,7 +10,7 @@ i = 0
 
 while i != 10:
     distance = ultrasonic.ultrasonic_read(TRIG,ECHO)
-    print(distance,"cm")
+    print(distance,"m")
     i += 1
     time.sleep(1)
 

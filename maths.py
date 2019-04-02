@@ -7,11 +7,11 @@ sin = math.sin
 sqrt = math.sqrt
 atan = math.atan
 
-def velocity_math(counter,time,speedarr,velocityarr,currentX,currentY,previouscX,previouscY,distance,angle,ratio,rpphorizontal,rppvertical,hhorizontalfv,hverticalfv,river_angle):
+def velocity_math(counter,time,speedarr,velocityarr,currentX,currentY,previouscX,previouscY,distance,angle,ratio,rpphorizontal,rppvertical,hhorizontalfv,hverticalfv,river_angle,cross_section,flowarr):
     if counter == 0:
         previouscX = currentX
         previouscY = currentY
-        speedmax,speedavg,velocitymax,velocityavg = 0,0,0,0
+        speedmax,speedavg,velocitymax,velocityavg,flowmax,flowavg = 0,0,0,0,0,0
         strspeed = "0"
         counter = 1
     else:
@@ -62,6 +62,11 @@ def velocity_math(counter,time,speedarr,velocityarr,currentX,currentY,previouscX
         velocityarr.append(ang_vel)
         velocitymax = max(velocityarr)
         velocityavg = sum(velocityarr) / len(velocityarr)
+        correction_factor = 0.8
+        flow_rate = ang_vel * cross_section * correction_factor
+        flowarr.append(flow_rate)
+        flowmax = max(flowarr)
+        flowavg = sum(flowarr) / len(flowarr)
         previouscX = currentX
         previouscY = currentY
-    return (counter,speedarr,velocityarr,previouscX,previouscY,strspeed,speedmax,speedavg,velocitymax,velocityavg)
+    return (counter,speedarr,velocityarr,previouscX,previouscY,strspeed,speedmax,speedavg,velocitymax,velocityavg,flowarr,flowmax,flowavg)
