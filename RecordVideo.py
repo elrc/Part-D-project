@@ -1,3 +1,13 @@
+"""
+Code to record video and save important variables such as distance
+Written by: Robert Crocker
+Email contact: r.crocker-14@student.lboro.ac.uk
+Extracts of code taken from:
+https://www.pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
+Date created: 15/12/18
+Last updated: 18/04/19
+"""
+
 # import the necessary packages
 from __future__ import print_function
 from videostream import VideoStream
@@ -8,6 +18,7 @@ import ultrasonic
 import imutils
 import time
 import cv2
+import csv
 
 GPIO.setwarnings(False)
 
@@ -18,7 +29,7 @@ vs = VideoStream(usePiCamera=False, resolution=(1024,576), framerate=20).start()
 TRIG,ECHO = ultrasonic.ultrasonic_setup()
 
 p = 0
-dv,t = [],[]
+dv,t,ts = [],[],[]
  
 # initialize the FourCC, video writer, dimensions of the frame, and
 # zeros array
@@ -27,6 +38,7 @@ writer = None
 (h, w) = (None, None)
 
 cv2.namedWindow("Window")
+print("[INFO] video recoding...")
 
 # loop over frames from the video stream
 while True:
@@ -38,6 +50,7 @@ while True:
         tt = end_timer - start_timer
         t.append(tt)
     start_timer = time.time()
+    ts.append(time.ctime(start_timer))
     distance = ultrasonic.ultrasonic_read(TRIG,ECHO)
     dv.append(distance)
  
@@ -61,6 +74,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
  
+print("[INFO] video recording stopped")
 # do a bit of cleanup
 print("[INFO] cleaning up...")
 cv2.destroyAllWindows()
@@ -70,3 +84,10 @@ ultrasonic.ultrasonic_cleanup()
 
 np.savetxt("/home/pi/PartD_Project/Variables/distance_values.csv", np.array(dv), delimiter=",")
 np.savetxt("/home/pi/PartD_Project/Variables/time_values.csv", np.array(t), delimiter=",")
+data = zip(ts)
+with open("/home/pi/PartD_Project/Variables/timedate.csv", "w") as csvFile:
+    file = csv.writer(csvFile)
+    file.writerows(data)
+csvFile.close()
+
+print("[INFO] program successfully executed")

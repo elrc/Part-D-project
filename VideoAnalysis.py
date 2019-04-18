@@ -1,3 +1,15 @@
+"""
+Code to track and measure velocity of object using video file
+Written by: Robert Crocker
+Email contact: r.crocker-14@student.lboro.ac.uk
+Extracts of code taken from:
+https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
+https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/
+https://www.pyimagesearch.com/2016/01/04/unifying-picamera-and-cv2-videocapture-into-a-single-class-with-opencv/
+Date created: 15/12/18
+Last updated: 18/04/19
+"""
+
 from __future__ import print_function
 from shapedetector import ShapeDetector
 from maths import velocity_math
@@ -8,6 +20,7 @@ import cv2
 import time
 import math
 import argparse
+import csv
 
 cap = cv2.VideoCapture('/home/pi/PartD_Project/Videos/example.avi')
 
@@ -45,7 +58,7 @@ sqrt = math.sqrt
 atan = math.atan
 hp = 1024
 vp = 576
-fr =round(1/(sum(t)/len(t)))
+fr = round(1/(sum(t)/len(t)))
 
 # Sets the angle that the river is at 
 strrivang = "%d degrees" % river_angle
@@ -66,20 +79,35 @@ rpph = hfv / hp
 rppv = vfv / vp
 ang1 = fv / 2
 
+# Initialise variable and arrays
 i,h,p,pcX,pcY,ptcX,ptcY,smax,savg,vmax,vavg,ssmax,ssavg,vsmax,vsavg,stmax,stavg,vtmax,vtavg = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+e,ppcX,ppcY,spmax,spavg,vpmax,vpavg = 0,0,0,0,0,0,0
 bi,bh,bpscX,bpscY,bptcX,bptcY,bssmax,bssavg,bvsmax,bvsavg,bstmax,bstavg,bvtmax,bvtavg = 0,0,0,0,0,0,0,0,0,0,0,0,0,0
-rsfrmax,rtfrmax,bsfrmax,btfrmax,rsfravg,rtfravg,bsfravg,btfravg,frmax,fravg = 0,0,0,0,0,0,0,0,0,0
-trs,trt,tbs,tbt = 0,0,0,0
-sv,av,tv,atv = [],[],[],[]
-bsv,bav,btv,batv = [],[],[],[]
-rsf,rtf,bsf,btf = [],[],[],[]
+be,bppcX,bppcY,bspmax,bspavg,bvpmax,bvpavg = 0,0,0,0,0,0,0
+rsfrmax,rtfrmax,rpfrmax,bsfrmax,btfrmax,bpfrmax,rsfravg,rtfravg,rpfravg,bsfravg,btfravg,bpfravg,frmax,fravg = 0,0,0,0,0,0,0,0,0,0,0,0,0,0
+strss,ssmax,ssavg,vsmax,vsavg,rsfrmax,rsfravg = "0",0,0,0,0,0,0
+strts,stmax,stavg,vtmax,vtavg,rtfrmax,rtfravg = "0",0,0,0,0,0,0
+strps,spmax,spavg,vpmax,vpavg,rpfrmax,rpfravg = "0",0,0,0,0,0,0
+bstrss,bssmax,bssavg,bvsmax,bvsavg,bsfrmax,bsfravg = "0",0,0,0,0,0,0
+bstrts,bstmax,bstavg,bvtmax,bvtavg,btfrmax,btfravg = "0",0,0,0,0,0,0
+bstrps,bspmax,bspavg,bvpmax,bvpavg,bpfrmax,bpfravg = "0",0,0,0,0,0,0
+rssl,rsvl,rsfrl,rsval,rtsl,rtvl,rtfrl,rtval,rpsl,rpvl,rpfrl,rpval = 0,0,0,0,0,0,0,0,0,0,0,0
+bssl,bsvl,bsfrl,bsval,btsl,btvl,btfrl,btval,bpsl,bpvl,bpfrl,bpval = 0,0,0,0,0,0,0,0,0,0,0,0
+trs,trt,trp,tbs,tbt,tbp,ctt = 0,0,0,0,0,0,0
+trsa,trta,trpa,tbsa,tbta,tbpa,ct,at = [],[],[],[],[],[],[],[0]
+sv,av,tv,atv,pv,apv = [],[],[],[],[],[]
+bsv,bav,btv,batv,bpv,bapv = [],[],[],[],[],[]
+rsva,rtva,rpva,bsva,btva,bpva = [],[],[],[],[],[]
+rsf,rtf,rpf,bsf,btf,bpf = [],[],[],[],[],[]
+svt,avt,rsft,rsvat,tvt,atvt,rtft,rtvat,pvt,apvt,rpft,rpvat = [],[],[],[],[],[],[],[],[],[],[],[]
+bsvt,bavt,bsft,bsvat,btvt,batvt,btft,btvat,bpvt,bapvt,bpft,bpvat = [],[],[],[],[],[],[],[],[],[],[],[]
 
 strsmax = "N/A"
 strsavg = "N/A"
 strvmax = "N/A"
 strvavg = "N/A"
 
-print("[INFO] framerate", fr)
+print("[INFO] framerate", fr, "fps")
 print("[INFO] starting analysis...")
 
 cv2.namedWindow("Window")
@@ -92,21 +120,22 @@ while(cap.isOpened()):
         if writer is None:
             # store the image dimensions, initialzie the video writer,
             # and construct the eros array
-            (h, w) = (576, 1024)
+            (h, w) = (vp, hp)
             writer = cv2.VideoWriter("/home/pi/PartD_Project/Videos/analysed.mp4", 0x00000021, fr,
                 (w, h), True)
         
         d = distance[p]
-        strd = "Height = %fm" % round(d, 4)
+        strd = "Height = %fm" % round(d, 2)
         
-        if i != 0:
-            trs += t[p-1]
-        if h != 0:
-            trt += t[p-1]
-        if bi != 0:
-            tbs += t[p-1]
-        if bh != 0:
-            tbt += t[p-1]
+        if i != 0: trs += t[p-1]
+        if h != 0: trt += t[p-1]
+        if e != 0: trp += t[p-1]
+        if bi != 0: tbs += t[p-1]
+        if bh != 0: tbt += t[p-1]
+        if be != 0: tbp += t[p-1]
+        if p != 0: ctt += t[p-1]
+        ct.append(ctt)
+        if p != 0: at.append(t[p-1])
         
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         value = cv2.split(image)[2]
@@ -142,7 +171,9 @@ while(cap.isOpened()):
                     if cY > 72 and cY < 504:
                         shape = sd.detect(c)
                         if shape == "square" and p != 0:
-                            i,sv,av,pcX,pcY,strss,ssmax,ssavg,vsmax,vsavg,rsf,rsfrmax,rsfravg = velocity_math(i,trs,sv,av,cX,cY,pcX,pcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,rsf)
+                            i,sv,av,pcX,pcY,strss,ssmax,ssavg,vsmax,vsavg,rsf,rsfrmax,rsfravg,rsva = velocity_math(i,trs,sv,av,cX,cY,pcX,pcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,rsf,rsva,strss,
+                                                                                                                   ssmax,ssavg,vsmax,vsavg,rsfrmax,rsfravg)
+                            if trs != 0: trsa.append(trs)
                             trs = 0
                             # multiply the contour (x, y)-coordinates by the resize ratio,
                             # then draw the contours and the name of the shape on the image
@@ -150,13 +181,25 @@ while(cap.isOpened()):
                             cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                             cv2.putText(frame, strss, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                         elif shape == "triangle" and p != 0:
-                            h,tv,atv,ptcX,ptcY,strts,stmax,stavg,vtmax,vtavg,rtf,rtfrmax,rstravg = velocity_math(h,trt,tv,atv,cX,cY,ptcX,ptcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,rtf)
+                            h,tv,atv,ptcX,ptcY,strts,stmax,stavg,vtmax,vtavg,rtf,rtfrmax,rtfravg,rtva = velocity_math(h,trt,tv,atv,cX,cY,ptcX,ptcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,rtf,rtva,
+                                                                                                                      strts,stmax,stavg,vtmax,vtavg,rtfrmax,rtfravg)
+                            if trt != 0: trta.append(trt)
                             trt = 0
                             # multiply the contour (x, y)-coordinates by the resize ratio,
                             # then draw the contours and the name of the shape on the image
                             c = c.astype("int")
                             cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                             cv2.putText(frame, strts, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        elif shape == "pentagon" and p != 0:
+                            e,pv,apv,ppcX,ppcY,strps,spmax,spavg,vpmax,vpavg,rpf,rpfrmax,rpfravg,rpva = velocity_math(e,trp,pv,apv,cX,cY,ppcX,ppcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,rpf,rpva,
+                                                                                                                      strps,spmax,spavg,vpmax,vpavg,rpfrmax,rpfravg)
+                            if trp != 0: trpa.append(trp)
+                            trp = 0
+                            # multiply the contour (x, y)-coordinates by the resize ratio,
+                            # then draw the contours and the name of the shape on the image
+                            c = c.astype("int")
+                            cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
+                            cv2.putText(frame, strps, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                             
         for c in cnts_blue:
             # compute the center of the contour, then detect the name of the
@@ -169,7 +212,9 @@ while(cap.isOpened()):
                     if cY > 72 and cY < 504:
                         shape = sd.detect(c)
                         if shape == "square" and p != 0:
-                            bi,bsv,bav,bpscX,bpscY,bstrss,bssmax,bssavg,bvsmax,bvsavg,bsf,bsfrmax,bsfravg = velocity_math(bi,tbs,bsv,bav,cX,cY,bpscX,bpscY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,bsf)
+                            bi,bsv,bav,bpscX,bpscY,bstrss,bssmax,bssavg,bvsmax,bvsavg,bsf,bsfrmax,bsfravg,bsva = velocity_math(bi,tbs,bsv,bav,cX,cY,bpscX,bpscY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,
+                                                                                                                               cs,bsf,f,bsva,bstrss,bssmax,bssavg,bvsmax,bvsavg,bsfrmax,bsfravg)
+                            if tbs != 0: tbsa.append(tbs)
                             tbs = 0
                             # multiply the contour (x, y)-coordinates by the resize ratio,
                             # then draw the contours and the name of the shape on the image
@@ -177,35 +222,53 @@ while(cap.isOpened()):
                             cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                             cv2.putText(frame, bstrss, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                         elif shape == "triangle" and p != 0:
-                            bh,btv,batv,bptcX,bptcY,bstrts,bstmax,bstavg,bvtmax,bvtavg,btf,btfrmax,btfravg = velocity_math(bh,tbt,btv,batv,cX,cY,bptcX,bptcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,cs,btf)
+                            bh,btv,batv,bptcX,bptcY,bstrts,bstmax,bstavg,bvtmax,bvtavg,btf,btfrmax,btfravg,btva = velocity_math(bh,tbt,btv,batv,cX,cY,bptcX,bptcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,
+                                                                                                                                cs,btf,btva,bstrts,bstmax,bstavg,bvtmax,bvtavg,btfrmax,btfravg)
+                            if tbt != 0: tbta.append(tbt)
                             tbt = 0
                             # multiply the contour (x, y)-coordinates by the resize ratio,
                             # then draw the contours and the name of the shape on the image
                             c = c.astype("int")
                             cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                             cv2.putText(frame, bstrts, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        elif shape == "pentagon" and p != 0:
+                            be,bpv,bapv,bppcX,bppcY,bstrps,bspmax,bspavg,bvpmax,bvpavg,bpf,bpfrmax,bpfravg,bpva = velocity_math(be,tbp,bpv,bapv,cX,cY,bppcX,bppcY,d,ang1,rat,rpph,rppv,hhfv,hvfv,riv_ang,
+                                                                                                                                cs,bpf,bpva,bstrps,bspmax,bspavg,bvpmax,bvpavg,bpfrmax,bpfravg)
+                            if tbp != 0: tbpa.append(tbp)
+                            tbp = 0
+                            # multiply the contour (x, y)-coordinates by the resize ratio,
+                            # then draw the contours and the name of the shape on the image
+                            c = c.astype("int")
+                            cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
+                            cv2.putText(frame, bstrps, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                             
         rss = 1 if ssavg != 0 else 0
         rts = 1 if stavg != 0 else 0
+        rps = 1 if spavg != 0 else 0
         bss = 1 if bssavg != 0 else 0
         bts = 1 if bstavg != 0 else 0
+        bps = 1 if bspavg != 0 else 0
         rsv = 1 if vsavg != 0 else 0
         rtv = 1 if vtavg != 0 else 0
+        rpv = 1 if vpavg != 0 else 0
         bbsv = 1 if bvsavg != 0 else 0
         bbtv = 1 if bvtavg != 0 else 0
+        bbpv = 1 if bvpavg != 0 else 0
         rsfrc = 1 if rsfravg != 0 else 0
         rtfrc = 1 if rtfravg != 0 else 0
+        rpfrc = 1 if rpfravg != 0 else 0
         bsfrc = 1 if bsfravg != 0 else 0
         btfrc = 1 if btfravg != 0 else 0
-        if rss != 0 or rts != 0 or bss != 0 or bts != 0:
-            smax = max(ssmax,stmax,bssmax,bstmax)
-            savg = (ssavg + stavg + bssavg + bstavg) / (rss + rts + bss + bts)
-        if rsv != 0 or rtv != 0 or bbsv != 0 or bbtv != 0:
-            vmax = max(vsmax,vtmax,bvsmax,bvtmax)
-            vavg = (vsavg + vtavg + bvsavg + bvtavg) / (rsv + rtv + bbsv + bbtv)
-        if rsfrc != 0 or rtfrc != 0 or bsfrc != 0 or btfrc != 0:
-            frmax = max(rsfrmax,rtfrmax,bsfrmax,btfrmax)
-            fravg = (rsfravg + rtfravg + bsfravg + btfravg) / (rsfrc + rtfrc + bsfrc + btfrc)
+        bpfrc = 1 if bpfravg != 0 else 0
+        if rss != 0 or rts != 0 or rps != 0  or bss != 0 or bts != 0 or bps != 0:
+            smax = round((max(ssmax,stmax,spmax,bssmax,bstmax,bspmax)),3)
+            savg = round(((ssavg + stavg + spavg + bssavg + bstavg + bspavg) / (rss + rts + rps + bss + bts + bps)),3)
+        if rsv != 0 or rtv != 0 or rpv != 0 or bbsv != 0 or bbtv != 0 or bbpv != 0:
+            vmax = round((max(vsmax,vtmax,vpmax,bvsmax,bvtmax,bvpmax)),3)
+            vavg = round(((vsavg + vtavg + vpavg + bvsavg + bvtavg + bvpavg) / (rsv + rtv + rpv + bbsv + bbtv + bbpv)),3)
+        if rsfrc != 0 or rtfrc != 0 or rpfrc != 0 or bsfrc != 0 or btfrc != 0 or bpfrc != 0:
+            frmax = round((max(rsfrmax,rtfrmax,rpfrmax,bsfrmax,btfrmax,bpfrmax)),3)
+            fravg = round(((rsfravg + rtfravg + rpfravg + bsfravg + btfravg + bpfravg) / (rsfrc + rtfrc + rpfrc + bsfrc + btfrc + bpfrc)),3)
         strsmax = "Maximum Speed = %f m/s" % smax
         strsavg = "Average Speed = %f m/s" % savg
         strvmax = "Maximum Velocity = %f m/s" % vmax
@@ -225,7 +288,127 @@ while(cap.isOpened()):
         writer.write(frame)
         
         p += 1
-    
+        
+        if len(sv) > rssl:
+            svt.append(sv[len(sv)-1])
+            rssl = len(sv)
+        else:
+            svt.append("")
+        if len(av) > rsvl:
+            avt.append(av[len(av)-1])
+            rsvl = len(av)
+        else:
+            avt.append("")
+        if len(rsf) > rsfrl:
+            rsft.append(rsf[len(rsf)-1])
+            rsfrl = len(rsf)
+        else:
+            rsft.append("")
+        if len(rsva) > rsval:
+            rsvat.append(rsva[len(rsva)-1])
+            rsval = len(rsva)
+        else:
+            rsvat.append("")
+        if len(tv) > rtsl:
+            tvt.append(tv[len(tv)-1])
+            rtsl = len(tv)
+        else:
+            tvt.append("")
+        if len(atv) > rtvl:
+            atvt.append(atv[len(atv)-1])
+            rtvl = len(atv)
+        else:
+            atvt.append("")
+        if len(rtf) > rtfrl:
+            rtft.append(rtf[len(rtf)-1])
+            rtfrl = len(rtf)
+        else:
+            rtft.append("")
+        if len(rtva) > rtval:
+            rtvat.append(rtva[len(rtva)-1])
+            rtval = len(rtva)
+        else:
+            rtvat.append("")
+        if len(pv) > rpsl:
+            pvt.append(pv[len(pv)-1])
+            rpsl = len(pv)
+        else:
+            pvt.append("")
+        if len(apv) > rpvl:
+            apvt.append(apv[len(apv)-1])
+            rpvl = len(apv)
+        else:
+            apvt.append("")
+        if len(rpf) > rpfrl:
+            rpft.append(rpf[len(rpf)-1])
+            rpfrl = len(rpf)
+        else:
+            rpft.append("")
+        if len(rpva) > rpval:
+            rpvat.append(rpva[len(rpva)-1])
+            rpval = len(rpva)
+        else:
+            rpvat.append("")
+        if len(bsv) > bssl:
+            bsvt.append(bsv[len(bsv)-1])
+            bssl = len(bsv)
+        else:
+            bsvt.append("")
+        if len(bav) > bsvl:
+            bavt.append(bav[len(bav)-1])
+            bsvl = len(bav)
+        else:
+            bavt.append("")
+        if len(bsf) > bsfrl:
+            bsft.append(bsf[len(bsf)-1])
+            bsfrl = len(bsf)
+        else:
+            bsft.append("")
+        if len(bsva) > bsval:
+            bsvat.append(bsva[len(bsva)-1])
+            bsval = len(bsva)
+        else:
+            bsvat.append("")
+        if len(btv) > btsl:
+            btvt.append(btv[len(btv)-1])
+            btsl = len(btv)
+        else:
+            btvt.append("")
+        if len(batv) > btvl:
+            batvt.append(batv[len(batv)-1])
+            btvl = len(batv)
+        else:
+            batvt.append("")
+        if len(btf) > btfrl:
+            btft.append(btf[len(btf)-1])
+            btfrl = len(btf)
+        else:
+            btft.append("")
+        if len(btva) > btval:
+            btvat.append(btva[len(btva)-1])
+            btval = len(btva)
+        else:
+            btvat.append("")
+        if len(bpv) > bpsl:
+            bpvt.append(bpv[len(bpv)-1])
+            bpsl = len(bpv)
+        else:
+            bpvt.append("")
+        if len(bapv) > bpvl:
+            bapvt.append(bapv[len(bapv)-1])
+            bpvl = len(bapv)
+        else:
+            bapvt.append("")
+        if len(bpf) > bpfrl:
+            bpft.append(bpf[len(bpf)-1])
+            bpfrl = len(bpf)
+        else:
+            bpft.append("")
+        if len(bpva) > bpval:
+            bpvat.append(bpva[len(bpva)-1])
+            bpval = len(bpva)
+        else:
+            bpvat.append("")
         # show the frame
         #cv2.imshow('frame',frame)
         
@@ -240,17 +423,169 @@ cap.release()
 cv2.destroyAllWindows()
 
 var_vel = np.array([smax,savg,vmax,vavg,frmax,fravg])
+with open("/home/pi/PartD_Project/Variables/timedate.csv", "r") as readFile:
+    reader = csv.reader(readFile)
+    dates = list(reader)
+data = zip(dates,at,ct,distance,rsvat,svt,avt,rsft,rtvat,tvt,atvt,rtft,rpvat,pvt,apvt,rpft,bsvat,bsvt,bavt,bsft,btvat,btvt,batvt,btft,bpvat,bpvt,bapvt,bpft)
+with open("/home/pi/PartD_Project/Variables/data.csv", "w") as csvFile:
+    file = csv.writer(csvFile)
+    file.writerow(("Time Stamp","Time Between Frames","Cumulative Time","Height","Red Square Angle","Red Square Speed","Red Square Velocity","Red Square Flow Rate","Red Triangle Angle"
+                   ,"Red Triangle Speed","Red Triangle Velocity","Red Triangle Flow Rate","Red Pentagon Angle","Red Pentagon Speed","Red Pentagon Velocity","Red Pentagon Flow Rate","Blue Square Angle"
+                   ,"Blue Square Speed","Blue Square Velocity","Blue Square Flow Rate","Blue Triangle Angle","Blue Triangle Speed","Blue Triangle Velocity","Blue Triangle Flow Rate"
+                   ,"Blue Pentagon Angle","Blue Pentagon Speed","Blue Pentagon Velocity","Blue Pentagon Flow Rate"))
+    file.writerows(data)
+readFile.close()
+csvFile.close()
 
-if av != []: np.savetxt("/home/pi/PartD_Project/Variables/red_sqr_vel.csv", np.array(av), delimiter=",")
-if sv != []: np.savetxt("/home/pi/PartD_Project/Variables/red_sqr_speed.csv", np.array(sv), delimiter=",")
-if rsf != []: np.savetxt("/home/pi/PartD_Project/Variables/red_sqr_flow_rate.csv", np.array(rsf), delimiter=",")
-if atv != []: np.savetxt("/home/pi/PartD_Project/Variables/red_tri_vel.csv", np.array(atv), delimiter=",")
-if tv != []: np.savetxt("/home/pi/PartD_Project/Variables/red_tri_speed.csv", np.array(tv), delimiter=",")
-if rtf != []: np.savetxt("/home/pi/PartD_Project/Variables/red_tri_flow_rate.csv", np.array(rtf), delimiter=",")
-if bav != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_sqr_vel.csv", np.array(bav), delimiter=",")
-if bsv != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_sqr_speed.csv", np.array(bsv), delimiter=",")
-if bsf != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_sqr_flow_rate.csv", np.array(bsf), delimiter=",")
-if batv != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_tri_vel.csv", np.array(batv), delimiter=",")
-if btv != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_tri_speed.csv", np.array(btv), delimiter=",")
-if btf != []: np.savetxt("/home/pi/PartD_Project/Variables/blue_tri_flow_rate.csv", np.array(btf), delimiter=",")
-np.savetxt("/home/pi/PartD_Project/Variables/velocities.csv", var_vel, delimiter=",")
+if av != []:
+    AV = zip(trsa,av)
+    with open("/home/pi/PartD_Project/Variables/red_sqr_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(AV)
+    csvFile.close()
+if sv != []:
+    SV = zip(trsa,sv)
+    with open("/home/pi/PartD_Project/Variables/red_sqr_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(SV)
+    csvFile.close()
+if rsf != []:
+    RSF = zip(trsa,rsf)
+    with open("/home/pi/PartD_Project/Variables/red_sqr_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RSF)
+    csvFile.close()
+if rsva != []:
+    RSVA = zip(trsa,rsva)
+    with open("/home/pi/PartD_Project/Variables/red_sqr_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RSVA)
+    csvFile.close()
+if atv != []:
+    ATV = zip(trta,atv)
+    with open("/home/pi/PartD_Project/Variables/red_tri_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(ATV)
+    csvFile.close()
+if tv != []:
+    TV = zip(trta,tv)
+    with open("/home/pi/PartD_Project/Variables/red_tri_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(TV)
+    csvFile.close()
+if rtf != []:
+    RTF = zip(trta,rtf)
+    with open("/home/pi/PartD_Project/Variables/red_tri_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RTF)
+    csvFile.close()
+if rtva != []:
+    RTVA = zip(trta,rtva)
+    with open("/home/pi/PartD_Project/Variables/red_tri_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RTVA)
+    csvFile.close()
+if apv != []:
+    APV = zip(trpa,apv)
+    with open("/home/pi/PartD_Project/Variables/red_pen_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(APV)
+    csvFile.close()
+if pv != []:
+    PV = zip(trpa,pv)
+    with open("/home/pi/PartD_Project/Variables/red_pen_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(PV)
+    csvFile.close()
+if rpf != []:
+    RPF = zip(trpa,rpf)
+    with open("/home/pi/PartD_Project/Variables/red_pen_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RPF)
+    csvFile.close()
+if rpva != []:
+    RPVA = zip(trpa,rpva)
+    with open("/home/pi/PartD_Project/Variables/red_pen_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(RPVA)
+    csvFile.close()
+if bav != []:
+    BAV = zip(tbsa,bav)
+    with open("/home/pi/PartD_Project/Variables/blue_sqr_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(AV)
+    csvFile.close()
+if bsv != []:
+    BSV = zip(tbsa,bsv)
+    with open("/home/pi/PartD_Project/Variables/blue_sqr_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BSV)
+    csvFile.close()
+if bsf != []:
+    BSF = zip(tbsa,bsf)
+    with open("/home/pi/PartD_Project/Variables/blue_sqr_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BSF)
+    csvFile.close()
+if bsva != []:
+    BSVA = zip(tbsa,bsva)
+    with open("/home/pi/PartD_Project/Variables/blue_sqr_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BSVA)
+    csvFile.close()
+if batv != []:
+    BATV = zip(tbta,batv)
+    with open("/home/pi/PartD_Project/Variables/blue_tri_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BATV)
+    csvFile.close()
+if btv != []:
+    TV = zip(tbta,btv)
+    with open("/home/pi/PartD_Project/Variables/blue_tri_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BTV)
+    csvFile.close()
+if btf != []:
+    BTF = zip(tbta,btf)
+    with open("/home/pi/PartD_Project/Variables/blue_tri_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BTF)
+    csvFile.close()
+if btva != []:
+    BTVA = zip(tbta,btva)
+    with open("/home/pi/PartD_Project/Variables/blue_tri_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BTVA)
+    csvFile.close()
+if bapv != []:
+    BAPV = zip(tbpa,bapv)
+    with open("/home/pi/PartD_Project/Variables/blue_pen_vel.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BAPV)
+    csvFile.close()
+if bpv != []:
+    BPV = zip(tbpa,bpv)
+    with open("/home/pi/PartD_Project/Variables/blue_pen_speed.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BPV)
+    csvFile.close()
+if bpf != []:
+    BPF = zip(tbpa,bpf)
+    with open("/home/pi/PartD_Project/Variables/blue_pen_flow_rate.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BPF)
+    csvFile.close()
+if bpva != []:
+    BPVA = zip(tbpa,bpva)
+    with open("/home/pi/PartD_Project/Variables/blue_pen_vel_ang.csv", "w") as csvFile:
+        file = csv.writer(csvFile)
+        file.writerows(BPVA)
+    csvFile.close()
+label = ["Speed Max (m/s)","Speed Average (m/s)","Velocity Max (m/s)","Velocity Average (m/s)","Flow Rate Max (m^3/s)","Flow Rate Average (m^3/s)"]
+veldata = zip(label,var_vel)
+with open("/home/pi/PartD_Project/Variables/velocities.csv", "w") as csvFile:
+    file = csv.writer(csvFile)
+    file.writerows(veldata)
+csvFile.close()
+
+print("[INFO] program successfully executed")

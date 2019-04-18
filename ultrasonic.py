@@ -32,7 +32,7 @@ def ultrasonic_read(TRIG,ECHO):
     
     distance = pulse_duration * 171.5
     
-    distance = round(distance, 4)
+    distance = round(distance, 2)
     
     return (distance)
 
