@@ -8,9 +8,9 @@ def nothing(x):
  
 cap = VideoStream(usePiCamera=False).start()
 
-lower_red1,lower_red2,average1 = colour_detect.lower_red(cap)
-upper_red1,upper_red2,average2 = colour_detect.upper_red(cap)
-lower_blue,upper_blue,average3 = colour_detect.blue(cap)
+lower_red1,lower_red2,average1 = colour_detect.calibrate(cap,0,10)
+upper_red1,upper_red2,average2 = colour_detect.calibrate(cap,160,179)
+lower_blue,upper_blue,average3 = colour_detect.calibrate(cap,100,130)
 averages = np.array([average1, average2, average3])
     
 cap.stop()

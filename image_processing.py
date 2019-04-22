@@ -24,4 +24,4 @@ def image_process(frame,lower,upper):
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
     
-    return (mask)
+    return (cnts)
