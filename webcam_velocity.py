@@ -104,9 +104,9 @@ strsavg = "N/A"
 strvmax = "N/A"
 strvavg = "N/A"
 
-lower_red1,lower_red2,average1 = colour_detect.lower_red(cap)
-upper_red1,upper_red2,average2 = colour_detect.upper_red(cap)
-lower_blue,upper_blue,average3 = colour_detect.blue(cap)
+lower_red1,lower_red2,average1 = colour_detect.calibrate(cap,0,10)
+upper_red1,upper_red2,average2 = colour_detect.calibrate(cap,160,179)
+lower_blue,upper_blue,average3 = colour_detect.calibrate(cap,100,130)
 
 print("[INFO] analysis started...")
 
@@ -173,8 +173,6 @@ while(True):
                                                                                                                ssmax,ssavg,vsmax,vsavg,rsfrmax,rsfravg)
                         if trs != 0: trsa.append(trs)
                         trs = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, strss, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
@@ -183,8 +181,6 @@ while(True):
                                                                                                                   strts,stmax,stavg,vtmax,vtavg,rtfrmax,rtfravg)
                         if trt != 0: trta.append(trt)
                         trt = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, strts, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
@@ -193,8 +189,6 @@ while(True):
                                                                                                                   strps,spmax,spavg,vpmax,vpavg,rpfrmax,rpfravg)
                         if trp != 0: trpa.append(trp)
                         trp = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, strps, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
@@ -214,8 +208,6 @@ while(True):
                                                                                                                            cs,bsf,f,bsva,bstrss,bssmax,bssavg,bvsmax,bvsavg,bsfrmax,bsfravg)
                         if tbs != 0: tbsa.append(tbs)
                         tbs = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, bstrss, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
@@ -224,8 +216,6 @@ while(True):
                                                                                                                             cs,btf,btva,bstrts,bstmax,bstavg,bvtmax,bvtavg,btfrmax,btfravg)
                         if tbt != 0: tbta.append(tbt)
                         tbt = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, bstrts, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
@@ -234,30 +224,16 @@ while(True):
                                                                                                                             cs,bpf,bpva,bstrps,bspmax,bspavg,bvpmax,bvpavg,bpfrmax,bpfravg)
                         if tbp != 0: tbpa.append(tbp)
                         tbp = 0
-                        # multiply the contour (x, y)-coordinates by the resize ratio,
-                        # then draw the contours and the name of the shape on the image
                         c = c.astype("int")
                         cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
                         cv2.putText(frame, bstrps, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                         
-    rss = 1 if ssavg != 0 else 0
-    rts = 1 if stavg != 0 else 0
-    rps = 1 if spavg != 0 else 0
-    bss = 1 if bssavg != 0 else 0
-    bts = 1 if bstavg != 0 else 0
-    bps = 1 if bspavg != 0 else 0
-    rsv = 1 if vsavg != 0 else 0
-    rtv = 1 if vtavg != 0 else 0
-    rpv = 1 if vpavg != 0 else 0
-    bbsv = 1 if bvsavg != 0 else 0
-    bbtv = 1 if bvtavg != 0 else 0
-    bbpv = 1 if bvpavg != 0 else 0
-    rsfrc = 1 if rsfravg != 0 else 0
-    rtfrc = 1 if rtfravg != 0 else 0
-    rpfrc = 1 if rpfravg != 0 else 0
-    bsfrc = 1 if bsfravg != 0 else 0
-    btfrc = 1 if btfravg != 0 else 0
-    bpfrc = 1 if bpfravg != 0 else 0
+    rss = 1 if ssavg != 0 else 0;rts = 1 if stavg != 0 else 0;rps = 1 if spavg != 0 else 0
+    bss = 1 if bssavg != 0 else 0;bts = 1 if bstavg != 0 else 0;bps = 1 if bspavg != 0 else 0
+    rsv = 1 if vsavg != 0 else 0;rtv = 1 if vtavg != 0 else 0;rpv = 1 if vpavg != 0 else 0
+    bbsv = 1 if bvsavg != 0 else 0;bbtv = 1 if bvtavg != 0 else 0;bbpv = 1 if bvpavg != 0 else 0
+    rsfrc = 1 if rsfravg != 0 else 0;rtfrc = 1 if rtfravg != 0 else 0;rpfrc = 1 if rpfravg != 0 else 0
+    bsfrc = 1 if bsfravg != 0 else 0;btfrc = 1 if btfravg != 0 else 0;bpfrc = 1 if bpfravg != 0 else 0
     if rss != 0 or rts != 0 or rps != 0  or bss != 0 or bts != 0 or bps != 0:
         smax = max(ssmax,stmax,spmax,bssmax,bstmax,bspmax)
         savg = (ssavg + stavg + spavg + bssavg + bstavg + bspavg) / (rss + rts + rps + bss + bts + bps)
@@ -289,126 +265,61 @@ while(True):
     #cv2.imshow("Overlay", res)
     p = 1
     
-    if len(sv) > rssl:
-        svt.append(sv[len(sv)-1])
-        rssl = len(sv)
-    else:
-        svt.append("")
-    if len(av) > rsvl:
-        avt.append(av[len(av)-1])
-        rsvl = len(av)
-    else:
-        avt.append("")
-    if len(rsf) > rsfrl:
-        rsft.append(rsf[len(rsf)-1])
-        rsfrl = len(rsf)
-    else:
-        rsft.append("")
-    if len(rsva) > rsval:
-        rsvat.append(rsva[len(rsva)-1])
-        rsval = len(rsva)
-    else:
-        rsvat.append("")
-    if len(tv) > rtsl:
-        tvt.append(tv[len(tv)-1])
-        rtsl = len(tv)
-    else:
-        tvt.append("")
-    if len(atv) > rtvl:
-        atvt.append(atv[len(atv)-1])
-        rtvl = len(atv)
-    else:
-        atvt.append("")
-    if len(rtf) > rtfrl:
-        rtft.append(rtf[len(rtf)-1])
-        rtfrl = len(rtf)
-    else:
-        rtft.append("")
-    if len(rtva) > rtval:
-        rtvat.append(rtva[len(rtva)-1])
-        rtval = len(rtva)
-    else:
-        rtvat.append("")
-    if len(pv) > rpsl:
-        pvt.append(pv[len(pv)-1])
-        rpsl = len(pv)
-    else:
-        pvt.append("")
-    if len(apv) > rpvl:
-        apvt.append(apv[len(apv)-1])
-        rpvl = len(apv)
-    else:
-        apvt.append("")
-    if len(rpf) > rpfrl:
-        rpft.append(rpf[len(rpf)-1])
-        rpfrl = len(rpf)
-    else:
-        rpft.append("")
-    if len(rpva) > rpval:
-        rpvat.append(rpva[len(rpva)-1])
-        rpval = len(rpva)
-    else:
-        rpvat.append("")
-    if len(bsv) > bssl:
-        bsvt.append(bsv[len(bsv)-1])
-        bssl = len(bsv)
-    else:
-        bsvt.append("")
-    if len(bav) > bsvl:
-        bavt.append(bav[len(bav)-1])
-        bsvl = len(bav)
-    else:
-        bavt.append("")
-    if len(bsf) > bsfrl:
-        bsft.append(bsf[len(bsf)-1])
-        bsfrl = len(bsf)
-    else:
-        bsft.append("")
-    if len(bsva) > bsval:
-        bsvat.append(bsva[len(bsva)-1])
-        bsval = len(bsva)
-    else:
-        bsvat.append("")
-    if len(btv) > btsl:
-        btvt.append(btv[len(btv)-1])
-        btsl = len(btv)
-    else:
-        btvt.append("")
-    if len(batv) > btvl:
-        batvt.append(batv[len(batv)-1])
-        btvl = len(batv)
-    else:
-        batvt.append("")
-    if len(btf) > btfrl:
-        btft.append(btf[len(btf)-1])
-        btfrl = len(btf)
-    else:
-        btft.append("")
-    if len(btva) > btval:
-        btvat.append(btva[len(btva)-1])
-        btval = len(btva)
-    else:
-        btvat.append("")
-    if len(bpv) > bpsl:
-        bpvt.append(bpv[len(bpv)-1])
-        bpsl = len(bpv)
-    else:
-        bpvt.append("")
-    if len(bapv) > bpvl:
-        bapvt.append(bapv[len(bapv)-1])
-        bpvl = len(bapv)
-    else:
-        bapvt.append("")
-    if len(bpf) > bpfrl:
-        bpft.append(bpf[len(bpf)-1])
-        bpfrl = len(bpf)
-    else:
-        bpft.append("")
-    if len(bpva) > bpval:
-        bpvat.append(bpva[len(bpva)-1])
-        bpval = len(bpva)
-    else:
-        bpvat.append("")
+    if len(sv) > rssl: svt.append(sv[len(sv)-1]);rssl = len(sv)
+    else: svt.append("")
+    if len(av) > rsvl: avt.append(av[len(av)-1]);rsvl = len(av)
+    else: avt.append("")
+    if len(rsf) > rsfrl: rsft.append(rsf[len(rsf)-1]);rsfrl = len(rsf)
+    else: rsft.append("")
+    if len(rsva) > rsval: rsvat.append(rsva[len(rsva)-1]);rsval = len(rsva)
+    else: rsvat.append("")
+    if len(tv) > rtsl: tvt.append(tv[len(tv)-1]);rtsl = len(tv)
+    else: tvt.append("")
+    if len(atv) > rtvl: atvt.append(atv[len(atv)-1]);rtvl = len(atv)
+    else: atvt.append("")
+    if len(rtf) > rtfrl: rtft.append(rtf[len(rtf)-1]);rtfrl = len(rtf)
+    else: rtft.append("")
+    if len(rtva) > rtval: rtvat.append(rtva[len(rtva)-1]);rtval = len(rtva)
+    else: rtvat.append("")
+    if len(pv) > rpsl: pvt.append(pv[len(pv)-1]);rpsl = len(pv)
+    else: pvt.append("")
+    if len(apv) > rpvl: apvt.append(apv[len(apv)-1]);rpvl = len(apv)
+    else: apvt.append("")
+    if len(rpf) > rpfrl: rpft.append(rpf[len(rpf)-1]);rpfrl = len(rpf)
+    else: rpft.append("")
+    if len(rpva) > rpval: rpvat.append(rpva[len(rpva)-1]);rpval = len(rpva)
+    else: rpvat.append("")
+    if len(bsv) > bssl: bsvt.append(bsv[len(bsv)-1]);bssl = len(bsv)
+    else: bsvt.append("")
+    if len(bav) > bsvl: bavt.append(bav[len(bav)-1]);bsvl = len(bav)
+    else: bavt.append("")
+    if len(bsf) > bsfrl: bsft.append(bsf[len(bsf)-1]);bsfrl = len(bsf)
+    else: bsft.append("")
+    if len(bsva) > bsval: bsvat.append(bsva[len(bsva)-1]);bsval = len(bsva)
+    else: bsvat.append("")
+    if len(btv) > btsl: btvt.append(btv[len(btv)-1]);btsl = len(btv)
+    else: btvt.append("")
+    if len(batv) > btvl: batvt.append(batv[len(batv)-1]);btvl = len(batv)
+    else: batvt.append("")
+    if len(btf) > btfrl: btft.append(btf[len(btf)-1]);btfrl = len(btf)
+    else: btft.append("")
+    if len(btva) > btval: btvat.append(btva[len(btva)-1]);btval = len(btva)
+    else: btvat.append("")
+    if len(bpv) > bpsl: bpvt.append(bpv[len(bpv)-1]);bpsl = len(bpv)
+    else: bpvt.append("")
+    if len(bapv) > bpvl: bapvt.append(bapv[len(bapv)-1]);bpvl = len(bapv)
+    else: bapvt.append("")
+    if len(bpf) > bpfrl: bpft.append(bpf[len(bpf)-1]);bpfrl = len(bpf)
+    else: bpft.append("")
+    if len(bpva) > bpval: bpvat.append(bpva[len(bpva)-1]);bpval = len(bpva)
+    else: bpvat.append("")
+    
+    if trs > 1: i = 0; trs = 0
+    if trt > 1: h = 0; trt = 0
+    if trp > 1: e = 0; trp = 0
+    if tbs > 1: bi = 0; tbs = 0
+    if tbt > 1: bh = 0; tbt = 0
+    if tbp > 1: be = 0; tbp = 0
         
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
