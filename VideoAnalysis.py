@@ -52,7 +52,7 @@ cs = args["cross"]
 # initialise the FourCC, video writer, dimensions of the frame, and zeros array
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
 writer = None
-(h, w) = (None, None)
+(hh, w) = (None, None)
 
 # initialise maths
 pi = math.pi
@@ -126,9 +126,9 @@ while(cap.isOpened()):
         # check if the writer is None
         if writer is None:
             # store the image dimensions, initialzie the video writer, and construct the eros array
-            (h, w) = (vp, hp)
+            (hh, w) = (vp, hp)
             writer = cv2.VideoWriter("/home/pi/PartD_Project/Videos/analysed.mp4", 0x00000021, fr,
-                (w, h), True)
+                (w, hh), True)
         
         d = distance[p]
         strd = "Height = %fm" % round(d, 2)
@@ -326,6 +326,13 @@ while(cap.isOpened()):
         else: bpft.append("")
         if len(bpva) > bpval: bpvat.append(bpva[len(bpva)-1]);bpval = len(bpva)
         else: bpvat.append("")
+        
+        if trs > 1: i = 0; trs = 0
+        if trt > 1: h = 0; trt = 0
+        if trp > 1: e = 0; trp = 0
+        if tbs > 1: bi = 0; tbs = 0
+        if tbt > 1: bh = 0; tbt = 0
+        if tbp > 1: be = 0; tbp = 0
         
         # if the `q` key was pressed, break from the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
